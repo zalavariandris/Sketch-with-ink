@@ -1,28 +1,30 @@
 
 class DebugTool{
-    begin(e){
-        console.log("DebugTool->begin");
+    begin(props){
+        console.log("DebugTool->begin", props.x, props.y);
     }
 
-    drag(e){
-        console.log("DebugTool->drag");
+    drag(props){
+        console.log("DebugTool->drag", props.x, props.y);
+        const ctx = props.canvas.getContext("2D");
+        props.paper.renderCircle(props.x, props.y)
     }
 
-    end(e){
-        console.log("DebugTool->end");
+    end(props){
+        console.log("DebugTool->end", props.x, props.y);
     }
 }
 
 class InkTool{
-    begin(e){
+    begin(x,y,element){
 
     }
 
-    drag(e){
+    drag(x,y,element){
 
     }
 
-    end(e){
+    end(x,y,element){
 
     }
 }
@@ -54,7 +56,7 @@ class Paper{
         this.canvas.style.border = "1px solid red";
         this.page.appendChild(this.canvas)
         this.resize_canvas(2480, 3508)
-        this.renderCircle();
+        this.renderCircle(100, 100);
 
         this.canvas.style.width="100%";
         this.canvas.style.height="100%";
@@ -72,19 +74,40 @@ class Paper{
         {
             downOffsetX = event.offsetX;
             downOffsetY = event.offsetY;
-            this.currentTool.begin(event);
+            this.currentTool.begin({
+                x: event.offsetX,
+                y: event.offsetY,
+                xBegin: downOffsetX,
+                yBegin: downOffsetY,
+                canvas: this.canvas,
+                paper: this
+            });
         }
         
         let i=0;
         const toolDrag = (event)=>
         {
             i++;
-            this.currentTool.drag(event);
+            this.currentTool.drag({
+                x: event.offsetX,
+                y: event.offsetY,
+                xBegin: downOffsetX,
+                yBegin: downOffsetY,
+                canvas: this.canvas,
+                paper: this
+            });
         }
         
         const toolEnd = (event)=>
         {
-            this.currentTool.end(event);
+            this.currentTool.end({
+                x: event.offsetX,
+                y: event.offsetY,
+                xBegin: downOffsetX,
+                yBegin: downOffsetY,
+                paper: this,
+                canvas: this.canvas
+            });
             this.page.removeEventListener("pointermove", toolDrag);
             this.page.removeEventListener("pointerup", toolEnd);
         }
@@ -98,11 +121,11 @@ class Paper{
         }, { passive: true })
     }
 
-    renderCircle(){
+    renderCircle(x, y){
         const ctx = this.canvas.getContext("2d");
 
         ctx.beginPath();
-        ctx.arc(100, 75, 50, 0, 2 * Math.PI);
+        ctx.arc(x, y, 50, 0, 2 * Math.PI);
         ctx.stroke();
     }
 
