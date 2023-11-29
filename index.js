@@ -17,24 +17,63 @@ class DebugTool{
 }
 
 class InkTool{
-    begin(x,y,paper)
+    begin(args)
     {
-        console.log("InkTool->begin", x, y);
+        const x = args.x;
+        const y = args.y;
         this.current_stroke = new Stroke([{x, y, t:Date.now(), d: 0}]);
-        
 
     }
 
-    drag(x,y,paper){
-        console.log("InkTool->drag", x, y);
+    drag(args){
+        const x = args.x;
+        const y = args.y;
         this.current_stroke.add(x, y, Date.now());
-        this.current_stroke.add(e.offsetX, e.offsetY, Date.now())
 
     }
 
-    end(x,y,paper){
-        console.log("InkTool->end", x, y);
-        paper.render_ink(this.current_stroke, 0, 1);
+    end(args){
+        const x = args.x;
+        const y = args.y;
+        this.render(args.paper, 0, 1);
+    }
+
+    render(paper, start=0.0, stop=1.0)
+    {
+        // calculate stroke length
+        // const length = calc_stroke_length(stroke);
+        const ctx = paper.canvas.getContext("2d");
+        const stroke = this.current_stroke;
+        console.log(stroke);
+        if(stroke.vertices.length<3){
+            return;
+        }
+        const count = stroke.vertices.length;
+        const start_idx = Math.floor( (count-1)*start );
+        const end_idx = Math.floor( (count-1)*stop );
+        const segment_length = stroke.vertices[end_idx].l-stroke.vertices[start_idx].l;
+        // calc segments speed
+        // TODO
+
+        const resolution=1.0;
+        const spline=stroke.interpolated(segment_length*resolution, start, stop);
+
+        for(let i=1;i<spline.vertices.length;i++){
+            const P0 = spline.vertices[i-1];
+            const P1 = spline.vertices[i];
+            const l = Math.sqrt( (P0.x-P1.x)**2 + (P0.y-P1.y)**2 );
+            if(l>0){
+                const dt = P1.t/P0.t;
+                const lineWidth=dt/(l+1);
+                ctx.lineWidth = Math.pow(lineWidth,0.6)*3+0.0;
+                ctx.lineCap = "butt";
+                ctx.beginPath();
+
+                ctx.moveTo(P0.x, P0.y);
+                ctx.lineTo(P1.x, P1.y);
+                ctx.stroke();
+            }
+        }
     }
 }
 
@@ -114,7 +153,8 @@ class Paper{
             this.page.removeEventListener("pointermove", toolDrag);
             this.page.removeEventListener("pointerleave", toolEnd);
             this.page.removeEventListener("pointerup", toolEnd);
-            const {x,y} = this.mapMousePosToPaper(event)
+
+            const {x,y} = this.mapMousePosToPaper(event);
             this.currentTool.end({
                 x: x,
                 y: y,
@@ -122,6 +162,7 @@ class Paper{
                 yBegin: yBegin,
                 paper: this,
             });
+
 
         }
         
@@ -143,45 +184,6 @@ class Paper{
         ctx.beginPath();
         ctx.arc(x, y, 50, 0, 2 * Math.PI);
         ctx.stroke();
-    }
-
-
-    render_ink(stroke, start=0.0, end=1.0)
-    {
-        // calculate stroke length
-        // const length = calc_stroke_length(stroke);
-        const ctx = this.canvas.getContext("2d");
-
-        if(stroke.vertices.length<3){
-            return;
-        }
-        const count = stroke.vertices.length;
-        const start_idx = Math.floor( (count-1)*start );
-        const end_idx = Math.floor( (count-1)*stop );
-        //console.log("render stroke:", start_idx, end_idx)
-        const segment_length = stroke.vertices[end_idx].l-stroke.vertices[start_idx].l;
-        // calc segments speed
-        // TODO
-
-        const resolution=1.0;
-        const spline=stroke.interpolated(segment_length*resolution, start, stop);
-        console.log("render ink", spline);
-        for(let i=1;i<spline.vertices.length;i++){
-            const P0 = spline.vertices[i-1];
-            const P1 = spline.vertices[i];
-            const l = Math.sqrt( (P0.x-P1.x)**2 + (P0.y-P1.y)**2 );
-            if(l>0){
-                const dt = P1.t/P0.t;
-                const lineWidth=dt/(l+1);
-                ctx.lineWidth = Math.pow(lineWidth,0.6)*3+0.0;
-                ctx.lineCap = "butt";
-                ctx.beginPath();
-
-                ctx.moveTo(P0.x, P0.y);
-                ctx.lineTo(P1.x, P1.y);
-                ctx.stroke();
-            }
-        }
     }
 
     resize_canvas(w, h){

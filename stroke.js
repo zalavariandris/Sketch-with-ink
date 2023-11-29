@@ -1,25 +1,52 @@
 /*
+UTILS
+*/
+// Return evenly spaced numbers over a specified interval. Including start and stop.
+function linspace(start, stop, num)
+{
+  if(num<=2){
+    return [start, stop];
+  }
+  let numbers = [];
+  const step = (stop-start)/(num-1);
+  for(let v=start;v<stop; v+=step){
+    numbers.push(v);
+  }
+  numbers.push(stop)
+  return numbers;
+}
+
+function _in_range(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+/*
 STROKE
 */
 export class Vertex
 {
   /*stroke vertices*/
-  constructor(x,y,t,d=0)
+  constructor(x,y,t,l=0)
   {
     this.x = x; // vertex x position
     this.y = y; // y position
-    this.t=t; // time vertex created for animation and speed
-    this.l=undefined; // stroke length at this point from first vertex. set stroke length at vertex creation for speedy acces to stroke length.
+    this.t = t; // time vertex created for animation and speed
+    this.l = 0.0; // stroke length at this point from first vertex. set stroke length at vertex creation for speedy acces to stroke length.
   }
 }
 
 export class Stroke {
   constructor(vertices){
     this.vertices = vertices;
+    this.calc_length();
   }
   
   calc_length(){
       /*not used yer*/
+      if(this.vertices.length<1){
+        return;
+      }
+
     let total_length=0;
     for(let i=1; i<this.vertices.length; i++){
       const V0 = stroke[i-1];
@@ -53,6 +80,7 @@ export class Stroke {
       vertices.push(new Vertex(x, y, time));
     }
     
+    
     return new Stroke(vertices);
   }
   
@@ -72,6 +100,8 @@ export class Stroke {
       if(P0.l!=undefined){
         vertex.l+=P0.l;
       }
+    }else{
+      vertex.l=0.0;
     }
     
     this.vertices.push(vertex);
