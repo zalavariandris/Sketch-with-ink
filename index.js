@@ -52,10 +52,11 @@ class InkTool{
         const start_idx = Math.floor( (count-1)*start );
         const end_idx = Math.floor( (count-1)*stop );
         const segment_length = stroke.vertices[end_idx].l-stroke.vertices[start_idx].l;
-        // calc segments speed
-        // TODO
 
         const resolution=1.0;
+        console.log(segment_length)
+
+        //const spline = stroke;
         const spline=stroke.interpolated(segment_length*resolution, start, stop);
 
         for(let i=1;i<spline.vertices.length;i++){
@@ -64,7 +65,7 @@ class InkTool{
             const l = Math.sqrt( (P0.x-P1.x)**2 + (P0.y-P1.y)**2 );
             if(l>0){
                 const dt = P1.t/P0.t;
-                const lineWidth=dt/(l+1);
+                const lineWidth=dt/(l+1)
                 ctx.lineWidth = Math.pow(lineWidth,0.6)*3+0.0;
                 ctx.lineCap = "butt";
                 ctx.beginPath();
@@ -103,7 +104,7 @@ class Paper{
         this.canvas = document.createElement("canvas");
         this.canvas.style.border = "1px solid red";
         this.page.appendChild(this.canvas)
-        this.resize_canvas(2480, 3508)
+        this.resize_canvas(2480*0.25, 3508*0.25)
         this.renderCircle(100, 100);
 
         this.canvas.style.width="100%";

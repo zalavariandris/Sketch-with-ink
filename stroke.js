@@ -1,3 +1,5 @@
+import bSpline from "https://cdn.skypack.dev/b-spline@2.0.2";
+
 /*
 UTILS
 */
@@ -26,12 +28,12 @@ STROKE
 export class Vertex
 {
   /*stroke vertices*/
-  constructor(x,y,t,l=0)
+  constructor(x,y,t,l=0.0)
   {
     this.x = x; // vertex x position
     this.y = y; // y position
     this.t = t; // time vertex created for animation and speed
-    this.l = 0.0; // stroke length at this point from first vertex. set stroke length at vertex creation for speedy acces to stroke length.
+    this.l = l; // stroke length at this point from first vertex. set stroke length at vertex creation for speedy acces to stroke length.
   }
 }
 
@@ -41,22 +43,21 @@ export class Stroke {
     this.calc_length();
   }
   
-  calc_length(){
-      /*not used yer*/
-      if(this.vertices.length<1){
-        return;
-      }
-
-    let total_length=0;
-    for(let i=1; i<this.vertices.length; i++){
-      const V0 = stroke[i-1];
-      const V1 = stroke[i];
-
-      const l = Math.sqrt((P0.x-P1.x)**2 + (P0.y-P1.y)**2)
-      total_length+=l;
-      V1.l=total_length;
+  calc_length()
+  {
+    if(this.vertices.length<1){
+      return;
     }
-    return total_length;
+
+    this.vertices[0].l=0;
+    for(let i=1; i<this.vertices.length; i++){
+      const V0 = this.vertices[i-1];
+      const V1 = this.vertices[i];
+
+      const l = Math.sqrt((V0.x-V1.x)**2 + (V0.y-V1.y)**2)
+      V1.l=V0.l+l;
+    }
+    return this.vertices[this.vertices.length-1].l;
   }
   
   interpolated(n=10, start=0.0, stop=1.0)
@@ -74,7 +75,7 @@ export class Stroke {
 
     // sample b-spline
     let vertices = [];
-    for(let t of linspace(start,stop,10)) {
+    for(let t of linspace(start,stop,20)) {
       var [x,y] = bSpline(t, degree, this.vertices.map((V)=>[V.x, V.y]), knots);
       var time = bSpline(t, degree, this.vertices.map((V)=>[V.t]), knots);
       vertices.push(new Vertex(x, y, time));
@@ -90,20 +91,17 @@ export class Stroke {
       x, 
       y, 
       t,
-      undefined
+      0.0
     );
     
     // precalculate segment lengths
-    if(this.vertices.length>1){
+    if(this.vertices.length>0){
       const P0 = this.vertices[this.vertices.length-1];
       vertex.l=Math.sqrt((vertex.x-P0.x)**2 + (vertex.y-P0.y)**2);
       if(P0.l!=undefined){
         vertex.l+=P0.l;
       }
-    }else{
-      vertex.l=0.0;
-    }
-    
+    }    
     this.vertices.push(vertex);
   }
 }
