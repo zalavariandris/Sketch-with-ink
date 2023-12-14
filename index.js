@@ -40,25 +40,19 @@ class InkTool{
 
     render(paper, start=0.0, stop=1.0)
     {
-        // calculate stroke length
-        // const length = calc_stroke_length(stroke);
         const ctx = paper.canvas.getContext("2d");
         const stroke = this.current_stroke;
         console.log(stroke);
         if(stroke.vertices.length<3){
             return;
         }
-        const count = stroke.vertices.length;
-        const start_idx = Math.floor( (count-1)*start );
-        const end_idx = Math.floor( (count-1)*stop );
-        const segment_length = stroke.vertices[end_idx].l-stroke.vertices[start_idx].l;
 
-        const resolution=1.0;
-        console.log(segment_length)
+        // interpolate spline
+        const segment_length = stroke.length(start, stop);
+        const resolution=.1;
+        const spline = stroke.interpolated(segment_length*resolution, start, stop);
 
-        //const spline = stroke;
-        const spline=stroke.interpolated(segment_length*resolution, start, stop);
-
+        // draw stroke
         for(let i=1;i<spline.vertices.length;i++){
             const P0 = spline.vertices[i-1];
             const P1 = spline.vertices[i];
@@ -105,7 +99,6 @@ class Paper{
         this.canvas.style.border = "1px solid red";
         this.page.appendChild(this.canvas)
         this.resize_canvas(2480*0.25, 3508*0.25)
-        this.renderCircle(100, 100);
 
         this.canvas.style.width="100%";
         this.canvas.style.height="100%";
@@ -177,14 +170,6 @@ class Paper{
         const x = event.offsetX / this.canvas.clientWidth * this.canvas.width;
         const y = event.offsetY / this.canvas.clientHeight * this.canvas.height;
         return {x:x,y:y}
-    }
-
-    renderCircle(x, y){
-        const ctx = this.canvas.getContext("2d");
-
-        ctx.beginPath();
-        ctx.arc(x, y, 50, 0, 2 * Math.PI);
-        ctx.stroke();
     }
 
     resize_canvas(w, h){
